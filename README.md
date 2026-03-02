@@ -1,2 +1,3 @@
 # OpsPulse
-Sunucu ve web servislerinin durumlarını (uptime/latency) gerçek zamanlı izleyen, hata anında mobil bildirim gönderen ve uzaktan aksiyon almayı sağlayan "Cloud-Native" bir platform.
+
+OpsPulse, sunucuların ve web servislerinin sağlık durumlarını gerçek zamanlı izleyen bulut tabanlı bir gözlemlenebilirlik platformudur. Go diliyle geliştirilen backend motoru, sunucuları sürekli tarayarak kullanıcıya web paneli üzerinden detaylı performans analizleri ve sistem yönetimi sunar. Mobil uygulama bileşeni, sistemde bir hata oluştuğunda anlık bildirim göndererek mühendislerin telefon üzerinden uzaktan müdahale etmesine olanak tanır. Proje altyapısı Terraform, Kubernetes ve Docker gibi modern araçlarla oluşturulmuş olup, GitHub Actions üzerinden tam otomatik bir CI/CD hattı ile yönetilir. Hem akademik hem de girişimcilik potansiyeli taşıyan bu sistem, şirketlerin kesinti sürelerini minimize ederek operasyonel verimliliği artırmayı hedefler.
