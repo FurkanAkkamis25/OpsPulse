@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  fcmToken  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  servers Server[]
+}
+
+model Server {
+  id           String   @id @default(cuid())
+  name         String
+  url          String
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isActive     Boolean  @default(true)
+  // Dynamic threshold (ms) set by AI; null means not yet computed
+  threshold    Int?
+  healthScore  Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  pingLogs PingLog[]
+  alerts   Alert[]
+
+  @@index([userId])
+}
+
+model PingLog {
+  id         String   @id @default(cuid())
+  serverId   String
+  server     Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  latency    Int?     // milliseconds; null if unreachable
+  statusCode Int?
+  isUp       Boolean
+  checkedAt  DateTime @default(now())
+
+  @@index([serverId, checkedAt])
+}
+
+model Alert {
+  id        String      @id @default(cuid())
+  serverId  String
+  server    Server      @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  type      AlertType
+  message   String
+  sentAt    DateTime    @default(now())
+
+  @@index([serverId])
+}
+
+enum AlertType {
+  DOWN
+  RECOVERED
+  THRESHOLD_BREACH
+  PREDICTED_FAILURE
+}
