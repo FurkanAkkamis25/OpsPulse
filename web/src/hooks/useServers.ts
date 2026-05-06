@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import client from '../api/client';
 
 export interface Server {
@@ -25,17 +25,29 @@ export interface Alert {
   sentAt: string;
 }
 
+const POLL_INTERVAL_MS = 30_000;
+
 export function useServers() {
   const [servers, setServers] = useState<Server[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetch = async () => {
-    const { data } = await client.get<Server[]>('/servers');
-    setServers(data);
-    setLoading(false);
+    try {
+      const { data } = await client.get<Server[]>('/servers');
+      setServers(data);
+      setLastUpdated(new Date());
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => {
+    fetch();
+    timerRef.current = setInterval(fetch, POLL_INTERVAL_MS);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, []);
 
   const addServer = async (name: string, url: string) => {
     const { data } = await client.post<Server>('/servers', { name, url });
@@ -52,7 +64,7 @@ export function useServers() {
     setServers((prev) => prev.map((s) => (s.id === id ? data : s)));
   };
 
-  return { servers, loading, addServer, deleteServer, updateThreshold, refresh: fetch };
+  return { servers, loading, lastUpdated, addServer, deleteServer, updateThreshold, refresh: fetch };
 }
 
 export async function fetchPingLogs(serverId: string, limit = 60): Promise<PingLog[]> {
@@ -63,4 +75,9 @@ export async function fetchPingLogs(serverId: string, limit = 60): Promise<PingL
 export async function fetchAlerts(serverId: string): Promise<Alert[]> {
   const { data } = await client.get<Alert[]>(`/servers/${serverId}/alerts`);
   return data;
+}
+
+export function calcUptime(logs: PingLog[]): number | null {
+  if (logs.length === 0) return null;
+  return Math.round((logs.filter((l) => l.isUp).length / logs.length) * 100);
 }

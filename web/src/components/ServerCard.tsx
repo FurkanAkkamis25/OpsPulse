@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Server } from '../hooks/useServers';
+import { useEffect, useState } from 'react';
+import { Server, calcUptime, fetchPingLogs, PingLog } from '../hooks/useServers';
 import HealthBadge from './HealthBadge';
 import LatencyChart from './LatencyChart';
 
@@ -13,6 +13,11 @@ export default function ServerCard({ server, onDelete, onUpdateThreshold }: Prop
   const [expanded, setExpanded] = useState(false);
   const [editThreshold, setEditThreshold] = useState(false);
   const [thresholdInput, setThresholdInput] = useState(String(server.threshold ?? ''));
+  const [uptime, setUptime] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchPingLogs(server.id, 100).then((logs: PingLog[]) => setUptime(calcUptime(logs)));
+  }, [server.id]);
 
   const saveThreshold = () => {
     const val = parseInt(thresholdInput, 10);
@@ -33,7 +38,18 @@ export default function ServerCard({ server, onDelete, onUpdateThreshold }: Prop
         </div>
       </div>
 
-      <div className="flex items-center gap-3 text-xs text-gray-400">
+      {/* Stats row */}
+      <div className="flex gap-4 text-xs text-gray-500">
+        <span>
+          Uptime:{' '}
+          <span className={
+            uptime === null ? 'text-gray-600' :
+            uptime >= 99 ? 'text-green-400' :
+            uptime >= 95 ? 'text-yellow-400' : 'text-red-400'
+          }>
+            {uptime !== null ? `${uptime}%` : '—'}
+          </span>
+        </span>
         <span>
           Threshold:{' '}
           {editThreshold ? (

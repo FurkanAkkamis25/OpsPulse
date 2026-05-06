@@ -1,11 +1,10 @@
 import express from 'express';
 import request from 'supertest';
-import { register, login } from '../api/controllers/auth.controller.js';
-import { errorHandler } from '../api/middleware/error.middleware.js';
-import { prisma } from '../lib/prisma.js';
+import { register, login } from '../api/controllers/auth.controller';
+import { errorHandler } from '../api/middleware/error.middleware';
+import { prisma } from '../lib/prisma';
 
-// Isolate from the real DB
-jest.mock('../lib/prisma.js', () => ({
+jest.mock('../lib/prisma', () => ({
   prisma: {
     user: {
       findUnique: jest.fn(),
@@ -62,5 +61,10 @@ describe('POST /auth/login', () => {
       password: 'password123',
     });
     expect(res.status).toBe(401);
+  });
+
+  it('returns 400 for invalid body', async () => {
+    const res = await request(app).post('/auth/login').send({ email: 'notanemail' });
+    expect(res.status).toBe(400);
   });
 });
