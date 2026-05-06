@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Server, calcUptime, fetchPingLogs, PingLog } from '../hooks/useServers';
+import { Server, Alert, calcUptime, fetchPingLogs, fetchAlerts, PingLog } from '../hooks/useServers';
 import HealthBadge from './HealthBadge';
 import LatencyChart from './LatencyChart';
+import AlertPanel from './AlertPanel';
 
 interface Props {
   server: Server;
@@ -11,12 +12,21 @@ interface Props {
 
 export default function ServerCard({ server, onDelete, onUpdateThreshold }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const [showAlerts, setShowAlerts] = useState(false);
   const [editThreshold, setEditThreshold] = useState(false);
   const [thresholdInput, setThresholdInput] = useState(String(server.threshold ?? ''));
   const [uptime, setUptime] = useState<number | null>(null);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [alertCount, setAlertCount] = useState(0);
 
   useEffect(() => {
     fetchPingLogs(server.id, 100).then((logs: PingLog[]) => setUptime(calcUptime(logs)));
+    fetchAlerts(server.id).then((data) => {
+      setAlerts(data);
+      // Count alerts from last 24h
+      const since = Date.now() - 24 * 60 * 60 * 1000;
+      setAlertCount(data.filter((a) => new Date(a.sentAt).getTime() > since).length);
+    });
   }, [server.id]);
 
   const saveThreshold = () => {
@@ -27,12 +37,24 @@ export default function ServerCard({ server, onDelete, onUpdateThreshold }: Prop
 
   return (
     <div className="bg-gray-900 rounded-2xl p-5 space-y-3">
+      {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="font-semibold text-white truncate">{server.name}</p>
           <p className="text-gray-500 text-xs truncate">{server.url}</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
+          {alertCount > 0 && (
+            <button
+              onClick={() => { setShowAlerts((p) => !p); setExpanded(false); }}
+              className="relative"
+              title={`${alertCount} alert(s) in last 24h`}
+            >
+              <span className="text-red-400 text-xs font-semibold bg-red-400/10 px-2 py-0.5 rounded-full">
+                {alertCount} alert{alertCount > 1 ? 's' : ''}
+              </span>
+            </button>
+          )}
           <HealthBadge score={server.healthScore} />
           <span className={`w-2.5 h-2.5 rounded-full ${server.isActive ? 'bg-green-400' : 'bg-gray-600'}`} />
         </div>
@@ -72,9 +94,10 @@ export default function ServerCard({ server, onDelete, onUpdateThreshold }: Prop
         </span>
       </div>
 
-      <div className="flex gap-2">
+      {/* Actions */}
+      <div className="flex gap-3">
         <button
-          onClick={() => setExpanded((p) => !p)}
+          onClick={() => { setExpanded((p) => !p); setShowAlerts(false); }}
           className="text-xs text-gray-400 hover:text-white transition-colors"
         >
           {expanded ? 'Hide chart' : 'Show chart'}
@@ -87,9 +110,8 @@ export default function ServerCard({ server, onDelete, onUpdateThreshold }: Prop
         </button>
       </div>
 
-      {expanded && (
-        <LatencyChart serverId={server.id} threshold={server.threshold} />
-      )}
+      {expanded && <LatencyChart serverId={server.id} threshold={server.threshold} />}
+      {showAlerts && <AlertPanel alerts={alerts} />}
     </div>
   );
 }

@@ -69,4 +69,5 @@ dependencies {
     implementation(libs.firebase.messaging)
 
     implementation(libs.coroutines.android)
+    implementation(libs.coroutines.play.services)
 }
