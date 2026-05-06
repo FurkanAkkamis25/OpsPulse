@@ -29,18 +29,39 @@ export async function pingServer(serverId: string): Promise<void> {
     data: { serverId, latency, statusCode, isUp },
   });
 
+  const wasActive = server.isActive;
+  await prisma.server.update({
+    where: { id: serverId },
+    data: { isActive: isUp },
+  });
+
   if (!isUp) {
+    if (wasActive) {
+      await prisma.alert.create({
+        data: { serverId, type: 'DOWN', message: `${server.name} is unreachable` },
+      });
+      if (server.user.fcmToken) {
+        await sendPushNotification(
+          server.user.fcmToken,
+          'Server Down',
+          `${server.name} is unreachable`
+        );
+      }
+    }
+    return;
+  }
+
+  if (!wasActive) {
     await prisma.alert.create({
-      data: { serverId, type: 'DOWN', message: `${server.name} is unreachable` },
+      data: { serverId, type: 'RECOVERED', message: `${server.name} is back online` },
     });
     if (server.user.fcmToken) {
       await sendPushNotification(
         server.user.fcmToken,
-        'Server Down',
-        `${server.name} is unreachable`
+        'Server Recovered',
+        `${server.name} is back online`
       );
     }
-    return;
   }
 
   // Check latency against threshold
@@ -68,7 +89,7 @@ export async function pingServer(serverId: string): Promise<void> {
     take: 50,
   });
 
-  if (recentLogs.length >= 10) {
+  if (recentLogs.length >= 5) {
     const latencies = recentLogs.map((l) => l.latency as number);
     const analysis = await analyzeServer(latencies);
     if (analysis) {
