@@ -26,6 +26,7 @@ jobs:
       - run: npx prisma generate
       - run: npm run lint
       - run: npm run build
+      - run: npm test
 
   ai-service:
     name: AI Service (lint + test)
