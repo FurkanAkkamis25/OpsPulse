@@ -8,7 +8,7 @@ export async function pingServer(serverId: string): Promise<void> {
     where: { id: serverId },
     include: { user: true },
   });
-  if (!server || !server.isActive) return;
+  if (!server || !server.isActive || server.type === 'INTERNAL') return;
 
   const start = Date.now();
   let latency: number | null = null;

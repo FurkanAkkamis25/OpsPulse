@@ -18,25 +18,48 @@ model User {
   updatedAt DateTime @updatedAt
 
   servers Server[]
+  agents  Agent[]
+}
+
+model Agent {
+  id        String    @id @default(cuid())
+  name      String
+  apiKey    String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastSeen  DateTime?
+  createdAt DateTime  @default(now())
+
+  servers Server[]
+
+  @@index([userId])
 }
 
 model Server {
-  id           String   @id @default(cuid())
+  id           String      @id @default(cuid())
   name         String
   url          String
+  type         ServerType  @default(EXTERNAL)
   userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  isActive     Boolean  @default(true)
-  // Dynamic threshold (ms) set by AI; null means not yet computed
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agentId      String?
+  agent        Agent?      @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  isActive     Boolean     @default(true)
   threshold    Int?
   healthScore  Float?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   pingLogs PingLog[]
   alerts   Alert[]
 
   @@index([userId])
+  @@index([agentId])
+}
+
+enum ServerType {
+  EXTERNAL
+  INTERNAL
 }
 
 model PingLog {

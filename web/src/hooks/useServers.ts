@@ -5,6 +5,8 @@ export interface Server {
   id: string;
   name: string;
   url: string;
+  type: 'EXTERNAL' | 'INTERNAL';
+  agentId: string | null;
   isActive: boolean;
   healthScore: number | null;
   threshold: number | null;
@@ -25,7 +27,7 @@ export interface Alert {
   sentAt: string;
 }
 
-const POLL_INTERVAL_MS = 30_000;
+const POLL_INTERVAL_MS = 10_000;
 
 export function useServers() {
   const [servers, setServers] = useState<Server[]>([]);
@@ -49,8 +51,8 @@ export function useServers() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
-  const addServer = async (name: string, url: string) => {
-    const { data } = await client.post<Server>('/servers', { name, url });
+  const addServer = async (name: string, url: string, type: 'EXTERNAL' | 'INTERNAL' = 'EXTERNAL', agentId?: string) => {
+    const { data } = await client.post<Server>('/servers', { name, url, type, agentId });
     setServers((prev) => [data, ...prev]);
   };
 

@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 import javax.inject.Inject
 
 sealed interface AuthState {
@@ -33,7 +34,10 @@ class AuthViewModel @Inject constructor(
                 tokenManager.saveToken(res.token)
                 _state.value = AuthState.Success
             }
-            .onFailure { _state.value = AuthState.Error("Invalid credentials") }
+            .onFailure { e ->
+                val msg = if (e is HttpException) "Geçersiz e-posta veya şifre (${e.code()})" else "Sunucuya ulaşılamıyor — Wi-Fi kontrol et"
+                _state.value = AuthState.Error(msg)
+            }
     }
 
     fun register(name: String, email: String, password: String) = viewModelScope.launch {
@@ -43,7 +47,15 @@ class AuthViewModel @Inject constructor(
                 tokenManager.saveToken(res.token)
                 _state.value = AuthState.Success
             }
-            .onFailure { _state.value = AuthState.Error("Registration failed") }
+            .onFailure { e ->
+                val msg = when {
+                    e is HttpException && e.code() == 409 -> "E-posta zaten kullanımda"
+                    e is HttpException && e.code() == 400 -> "Şifre en az 8 karakter olmalı"
+                    e is HttpException -> "Sunucu hatası (${e.code()})"
+                    else -> "Sunucuya ulaşılamıyor — Wi-Fi kontrol et"
+                }
+                _state.value = AuthState.Error(msg)
+            }
     }
 
     fun logout() = viewModelScope.launch {

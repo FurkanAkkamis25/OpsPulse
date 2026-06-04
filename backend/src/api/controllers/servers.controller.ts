@@ -6,6 +6,8 @@ import { AuthRequest } from '../middleware/auth.middleware';
 const createSchema = z.object({
   name: z.string().min(1),
   url: z.string().url(),
+  type: z.enum(['EXTERNAL', 'INTERNAL']).default('EXTERNAL'),
+  agentId: z.string().optional(),
 });
 
 const updateThresholdSchema = z.object({
@@ -26,8 +28,22 @@ export async function createServer(req: AuthRequest, res: Response): Promise<voi
     res.status(400).json({ error: parsed.error.flatten() });
     return;
   }
+  const { agentId, ...rest } = parsed.data;
+
+  if (rest.type === 'INTERNAL') {
+    if (!agentId) {
+      res.status(400).json({ error: 'agentId is required for INTERNAL servers' });
+      return;
+    }
+    const agent = await prisma.agent.findFirst({ where: { id: agentId, userId: req.userId! } });
+    if (!agent) {
+      res.status(400).json({ error: 'Agent not found' });
+      return;
+    }
+  }
+
   const server = await prisma.server.create({
-    data: { ...parsed.data, userId: req.userId! },
+    data: { ...rest, userId: req.userId!, agentId: agentId ?? null },
   });
   res.status(201).json(server);
 }

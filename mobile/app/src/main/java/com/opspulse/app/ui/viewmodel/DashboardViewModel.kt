@@ -1,5 +1,6 @@
 package com.opspulse.app.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessaging
@@ -57,7 +58,11 @@ class DashboardViewModel @Inject constructor(
     private fun registerFcmToken() = viewModelScope.launch {
         runCatching {
             val token = FirebaseMessaging.getInstance().token.await()
+            Log.d("OpsPulse", "FCM token obtained: ${token.take(20)}...")
             repository.updateFcmToken(token)
+            Log.d("OpsPulse", "FCM token sent to backend successfully")
+        }.onFailure { e ->
+            Log.e("OpsPulse", "FCM token registration failed: ${e.message}", e)
         }
     }
 }

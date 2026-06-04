@@ -9,6 +9,7 @@ data class Server(
     val id: String,
     val name: String,
     val url: String,
+    val type: String = "EXTERNAL",
     val isActive: Boolean,
     val healthScore: Double?,
     val threshold: Int?,

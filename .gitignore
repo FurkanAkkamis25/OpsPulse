@@ -1,3 +1,6 @@
 .env
 *.log
 .DS_Store
+node_modules/
+backend/firebase-service-account.json
+mobile/app/google-services.json
