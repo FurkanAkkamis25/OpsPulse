@@ -19,9 +19,19 @@ class ServerRepository @Inject constructor(private val apiClient: ApiClient) {
 
     suspend fun getServers(): List<Server> = apiClient.api.getServers()
 
+    suspend fun createServer(name: String, url: String, type: String = "EXTERNAL"): Server =
+        apiClient.api.createServer(CreateServerRequest(name, url, type))
+
+    suspend fun deleteServer(id: String) = apiClient.api.deleteServer(id)
+
     suspend fun getPingLogs(serverId: String): List<PingLog> =
         apiClient.api.getPingLogs(serverId)
 
     suspend fun getAlerts(serverId: String): List<Alert> =
         apiClient.api.getAlerts(serverId)
+
+    suspend fun getAllAlerts(type: String? = null): List<AlertWithServer> =
+        apiClient.api.getAllAlerts(type)
+
+    suspend fun getStats(): Stats = apiClient.api.getStats()
 }

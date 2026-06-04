@@ -21,6 +21,7 @@ data class DashboardUiState(
     val pingLogs: List<PingLog> = emptyList(),
     val alerts: List<Alert> = emptyList(),
     val loading: Boolean = true,
+    val refreshing: Boolean = false,
     val error: String? = null,
 )
 
@@ -44,6 +45,13 @@ class DashboardViewModel @Inject constructor(
             .onFailure { _state.value = _state.value.copy(loading = false, error = it.message) }
     }
 
+    fun refresh() = viewModelScope.launch {
+        _state.value = _state.value.copy(refreshing = true)
+        runCatching { repository.getServers() }
+            .onSuccess { _state.value = _state.value.copy(servers = it, refreshing = false) }
+            .onFailure { _state.value = _state.value.copy(refreshing = false) }
+    }
+
     fun selectServer(server: Server) = viewModelScope.launch {
         _state.value = _state.value.copy(selectedServer = server)
         val logs = runCatching { repository.getPingLogs(server.id) }.getOrDefault(emptyList())
@@ -53,6 +61,21 @@ class DashboardViewModel @Inject constructor(
 
     fun clearSelection() {
         _state.value = _state.value.copy(selectedServer = null, pingLogs = emptyList(), alerts = emptyList())
+    }
+
+    fun addServer(name: String, url: String, type: String = "EXTERNAL") = viewModelScope.launch {
+        runCatching { repository.createServer(name, url, type) }
+            .onSuccess { server ->
+                _state.value = _state.value.copy(servers = listOf(server) + _state.value.servers)
+            }
+    }
+
+    fun deleteServer(id: String) = viewModelScope.launch {
+        runCatching { repository.deleteServer(id) }
+            .onSuccess {
+                _state.value = _state.value.copy(servers = _state.value.servers.filter { it.id != id })
+                if (_state.value.selectedServer?.id == id) clearSelection()
+            }
     }
 
     private fun registerFcmToken() = viewModelScope.launch {

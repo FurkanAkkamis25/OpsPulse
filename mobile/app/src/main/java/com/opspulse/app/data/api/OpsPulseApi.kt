@@ -17,6 +17,12 @@ interface OpsPulseApi {
     @GET("servers")
     suspend fun getServers(): List<Server>
 
+    @POST("servers")
+    suspend fun createServer(@Body body: CreateServerRequest): Server
+
+    @DELETE("servers/{id}")
+    suspend fun deleteServer(@Path("id") id: String)
+
     @GET("servers/{id}/logs")
     suspend fun getPingLogs(
         @Path("id") id: String,
@@ -25,4 +31,13 @@ interface OpsPulseApi {
 
     @GET("servers/{id}/alerts")
     suspend fun getAlerts(@Path("id") id: String): List<Alert>
+
+    @GET("servers/alerts")
+    suspend fun getAllAlerts(
+        @Query("type") type: String? = null,
+        @Query("limit") limit: Int = 100,
+    ): List<AlertWithServer>
+
+    @GET("servers/stats")
+    suspend fun getStats(): Stats
 }
