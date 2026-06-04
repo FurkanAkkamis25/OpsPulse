@@ -54,5 +54,17 @@ services:
     depends_on:
       - backend
 
+  agent:
+    build: ./agent
+    restart: unless-stopped
+    environment:
+      OPSPULSE_URL: http://backend:3000
+      AGENT_KEY: ${AGENT_KEY:-}
+      INTERVAL_MS: ${AGENT_INTERVAL_MS:-30000}
+    depends_on:
+      - backend
+    profiles:
+      - agent
+
 volumes:
   db_data:

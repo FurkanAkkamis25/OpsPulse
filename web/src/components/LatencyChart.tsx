@@ -19,7 +19,7 @@ export default function LatencyChart({ serverId, threshold }: Props) {
   if (data.length === 0) {
     return (
       <div className="py-6 text-center text-slate-400 text-xs">
-        No data yet — waiting for first ping
+        Henüz veri yok — ilk ping bekleniyor
       </div>
     );
   }
@@ -41,7 +41,7 @@ export default function LatencyChart({ serverId, threshold }: Props) {
             contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}
             labelStyle={{ color: '#64748b', fontSize: 11 }}
             itemStyle={{ color: '#0284c7', fontWeight: 600 }}
-            formatter={(v: number) => [`${v} ms`, 'Latency']}
+            formatter={(v: number) => [`${v} ms`, 'Gecikme']}
           />
           {threshold && (
             <ReferenceLine y={threshold} stroke="#f59e0b" strokeDasharray="4 2" strokeWidth={1.5}
