@@ -13,21 +13,21 @@ Sunucuların ve API'lerin sağlığını gerçek zamanlı izler, **Lineer Regres
 <table>
   <tr>
     <td align="center"><b>Giriş Ekranı</b></td>
+    <td align="center"><b>Kayıt Ekranı</b></td>
     <td align="center"><b>Dashboard</b></td>
-    <td align="center"><b>Sunucu Detayı</b></td>
   </tr>
   <tr>
     <td><img src="docs/screenshots/web-login.png" width="100%"/></td>
+    <td><img src="docs/screenshots/web-register.png" width="100%"/></td>
     <td><img src="docs/screenshots/web-dashboard.png" width="100%"/></td>
-    <td><img src="docs/screenshots/web-server-detail.png" width="100%"/></td>
   </tr>
   <tr>
-    <td align="center"><b>Uyarılar</b></td>
+    <td align="center"><b>Sunucu Detayı & Gecikme Grafiği</b></td>
     <td align="center"><b>Sunucu Ekle</b></td>
     <td></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/web-alerts.png" width="100%"/></td>
+    <td><img src="docs/screenshots/web-server-detail.png" width="100%"/></td>
     <td><img src="docs/screenshots/web-add-server.png" width="100%"/></td>
     <td></td>
   </tr>
@@ -39,18 +39,18 @@ Sunucuların ve API'lerin sağlığını gerçek zamanlı izler, **Lineer Regres
   <tr>
     <td align="center"><b>Giriş</b></td>
     <td align="center"><b>Sunucular</b></td>
-    <td align="center"><b>Detay</b></td>
     <td align="center"><b>Uyarılar</b></td>
     <td align="center"><b>İstatistikler</b></td>
     <td align="center"><b>Profil</b></td>
+    <td align="center"><b>Sunucu Detayı</b></td>
   </tr>
   <tr>
     <td><img src="docs/screenshots/mobile-login.jpeg" width="100%"/></td>
     <td><img src="docs/screenshots/mobile-servers.jpeg" width="100%"/></td>
-    <td><img src="docs/screenshots/mobile-detail.jpeg" width="100%"/></td>
     <td><img src="docs/screenshots/mobile-alerts.jpeg" width="100%"/></td>
     <td><img src="docs/screenshots/mobile-stats.jpeg" width="100%"/></td>
     <td><img src="docs/screenshots/mobile-profile.jpeg" width="100%"/></td>
+    <td><img src="docs/screenshots/mobile-detail.jpeg" width="100%"/></td>
   </tr>
 </table>
 
