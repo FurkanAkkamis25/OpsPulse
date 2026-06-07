@@ -1,75 +1,175 @@
 # OpsPulse
 
-Infrastructure monitoring and AI-based early warning platform. Monitors server and API health in real-time, predicts failures before they happen using Linear Regression over latency history, and delivers critical alerts to mobile devices via Firebase.
+> AI destekli sunucu izleme ve erken uyarı platformu
 
-## Architecture
+Sunucuların ve API'lerin sağlığını gerçek zamanlı izler, **Lineer Regresyon** ile geçmiş gecikme verilerini analiz ederek arızaları **olmadan önce tahmin eder** ve kritik uyarıları Firebase üzerinden mobil cihazlara gönderir.
+
+---
+
+## Ekran Görüntüleri
+
+### Web Paneli
+
+<table>
+  <tr>
+    <td align="center"><b>Giriş Ekranı</b></td>
+    <td align="center"><b>Dashboard</b></td>
+    <td align="center"><b>Sunucu Detayı</b></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/web-login.png" width="100%"/></td>
+    <td><img src="docs/screenshots/web-dashboard.png" width="100%"/></td>
+    <td><img src="docs/screenshots/web-server-detail.png" width="100%"/></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Uyarılar</b></td>
+    <td align="center"><b>Sunucu Ekle</b></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/web-alerts.png" width="100%"/></td>
+    <td><img src="docs/screenshots/web-add-server.png" width="100%"/></td>
+    <td></td>
+  </tr>
+</table>
+
+### Mobil Uygulama (Android)
+
+<table>
+  <tr>
+    <td align="center"><b>Giriş</b></td>
+    <td align="center"><b>Sunucular</b></td>
+    <td align="center"><b>Detay</b></td>
+    <td align="center"><b>Uyarılar</b></td>
+    <td align="center"><b>İstatistikler</b></td>
+    <td align="center"><b>Profil</b></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/mobile-login.jpeg" width="100%"/></td>
+    <td><img src="docs/screenshots/mobile-servers.jpeg" width="100%"/></td>
+    <td><img src="docs/screenshots/mobile-detail.jpeg" width="100%"/></td>
+    <td><img src="docs/screenshots/mobile-alerts.jpeg" width="100%"/></td>
+    <td><img src="docs/screenshots/mobile-stats.jpeg" width="100%"/></td>
+    <td><img src="docs/screenshots/mobile-profile.jpeg" width="100%"/></td>
+  </tr>
+</table>
+
+---
+
+## Mimari
 
 ```
-web (React + Nginx :80)
-    └── /api → backend:3000
-backend (Node.js + Express + Prisma)
-    ├── REST API (auth, servers, metrics)
-    ├── Pinger engine (node-cron)
-    └── ai-service:8000 (health score & threshold)
-ai-service (Python + FastAPI)
-db (PostgreSQL 16)
-mobile (Native Android — FCM push alerts)
+Web (React + Nginx :80)
+    │
+    ▼
+Backend (Node.js + Express :3000)
+    ├── REST API  (auth, sunucular, metrikler)
+    ├── Pinger Motoru  (node-cron, 60s)
+    └── AI Servis (Python + FastAPI :8000)
+            │
+            ▼
+       PostgreSQL 16
+            │
+            ▼
+    Firebase Cloud Messaging
+            │
+            ▼
+    Android Uygulaması
 ```
 
-## Quick Start
+---
+
+## Teknoloji Yığını
+
+| Katman | Teknoloji |
+|---|---|
+| Backend | Node.js 20 · Express · TypeScript · Prisma |
+| Veritabanı | PostgreSQL 16 |
+| AI Sidecar | Python 3.12 · FastAPI · scikit-learn |
+| Web | React 18 · Vite · Tailwind CSS · Recharts |
+| Mobil | Kotlin · Jetpack Compose · Hilt · Retrofit |
+| Bildirim | Firebase Cloud Messaging (FCM) |
+| DevOps | Docker Compose · GitHub Actions · GHCR |
+
+---
+
+## Yapay Zeka Nasıl Çalışır?
+
+Her ping döngüsünde (60 sn) backend, son 50 ping verisini AI servisine gönderir:
+
+1. **Lineer Regresyon** ile gecikme trendi hesaplanır
+2. Ortalama gecikme, yükselen trend ve jitter → **Sağlık Skoru (0–100)** üretilir
+3. 10 ping ilerisi **projeksiyon** yapılır — arıza riski varsa `predictedFailure: true`
+4. Skor 40 altına düşerse veya projeksiyon başarısız olursa **FCM bildirimi** gönderilir
+
+---
+
+## Hızlı Başlangıç
 
 ```bash
-cp .env.example .env        # fill in JWT_SECRET at minimum
+# Tüm servisleri tek komutla başlat (geliştirme)
+./start.sh
+```
+
+```bash
+# Üretim (Docker Compose)
+cp .env.example .env        # JWT_SECRET ve POSTGRES_PASSWORD doldur
 docker compose up -d --build
 ```
 
-- Web dashboard → http://localhost
-- Backend API  → http://localhost:3000
-- AI service   → http://localhost:8000
+| Servis | Adres |
+|---|---|
+| Web | http://localhost |
+| Backend API | http://localhost:3000 |
+| AI Servisi | http://localhost:8000 |
 
-## Local Development
+---
+
+## Yerel Geliştirme
 
 **Backend**
 ```bash
-cd backend
-cp .env.example .env        # set DATABASE_URL and JWT_SECRET
-npm install
-npx prisma migrate dev
-npm run dev                 # http://localhost:3000
+cd backend && npm install
+npx prisma db push
+npm run dev
 ```
 
-**AI Service**
+**AI Servisi**
 ```bash
-cd ai-service
-pip install -r requirements.txt
-uvicorn main:app --reload   # http://localhost:8000
+cd ai-service && pip install -r requirements.txt
+uvicorn main:app --reload
 ```
 
 **Web**
 ```bash
-cd web
-npm install
-npm run dev                 # http://localhost:5173  (proxies /api → :3000)
+cd web && npm install && npm run dev
 ```
 
-**Mobile** — open `mobile/` in Android Studio, add `google-services.json` from Firebase Console, then run on emulator or device.
+**Mobil** — `mobile/` klasörünü Android Studio'da aç, Firebase Console'dan `google-services.json` ekle, cihaz veya emülatörde çalıştır.
 
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Backend | Node.js 20 · Express · TypeScript · Prisma |
-| Database | PostgreSQL 16 |
-| AI Sidecar | Python 3.12 · FastAPI · scikit-learn |
-| Web | React 18 · Vite · Tailwind CSS · Recharts |
-| Mobile | Kotlin · Jetpack Compose · Hilt · Retrofit |
-| Push | Firebase Cloud Messaging |
-| DevOps | Docker Compose · GitHub Actions · GHCR |
+---
 
 ## CI/CD
 
-Every push to `main`:
-1. **CI** — lint + build + test for backend, ai-service, and web (parallel)
-2. **CD** — build & push Docker images to GHCR, then SSH deploy to production server
+`main` branch'e her push'ta:
 
-Required GitHub secrets for CD: `SSH_HOST`, `SSH_USER`, `SSH_PRIVATE_KEY`, `JWT_SECRET`, `POSTGRES_PASSWORD`, `FCM_SERVER_KEY`.
+1. **CI** — Backend lint + build + test · AI servis test · Web lint + build (paralel)
+2. **CD** — Docker imajları GHCR'a build & push → SSH ile production sunucusuna deploy
+
+Gerekli GitHub Secrets: `SSH_HOST` `SSH_USER` `SSH_PRIVATE_KEY` `JWT_SECRET` `POSTGRES_PASSWORD` `FCM_SERVER_KEY`
+
+---
+
+## Proje Yapısı
+
+```
+OpsPulse/
+├── backend/        Node.js API + Pinger motoru
+├── ai-service/     Python yapay zeka servisi
+├── web/            React web paneli
+├── mobile/         Kotlin Android uygulaması
+├── agent/          Dahili ağ ajanı
+├── docs/           Ekran görüntüleri
+├── docker-compose.yml
+└── start.sh        Tek komutla başlatıcı
+```
